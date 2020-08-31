@@ -10,9 +10,17 @@ html, body {
 }
 
 #TopUI {
-  position: sticky;
+  position: absolute;
+  display: inline-block;
   top: 0;
+  left: 0;
   width: 100%;
-  background-color: rgba(50, 250, 50, 0.3);
   height: calc(var(--unit) * 2);
+  background-color: rgba(50, 250, 50, 0.3);
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
 }
