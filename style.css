@@ -1,0 +1,18 @@
+html, body {
+	--unit: 24px;
+	--pixel: 2px;
+	font-family: sans-serif;
+	user-select: none;
+	-moz-user-select: none;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+#TopUI {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  background-color: rgba(50, 250, 50, 0.3);
+  height: calc(var(--unit) * 2);
+}
