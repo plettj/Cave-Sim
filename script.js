@@ -31,7 +31,7 @@ class Character {
 }
 
 var char1 = new Character(unit * 3, unit * 3, walkingTileset);
-var x = 0
+var x = 0;
 function loopDraw() {
   if (x === 48 * 8) x = 0;
   clear(bctx);
