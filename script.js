@@ -11,10 +11,41 @@ var runSpeed = 32; // number of frames it takes to do 1 action.
 var canWidth = 24; // canvas width
 var canHeight = 12; // canvas height
 
+var C = document.getElementById("CharacterCanvas");
+C.width = unit * canWidth;
+C.height = unit * canHeight;
+var cctx = C.getContext('2d');
 var B = document.getElementById("BackgroundCanvas");
 B.width = unit * canWidth;
 B.height = unit * canHeight;
 var bctx = B.getContext('2d');
+
+class World {
+  constructor() {
+    this.map = [];
+    for (var y = 0; y < canHeight; y++) {
+      this.map.push([]);
+      for (var x = 0; x < canWidth; x++) {
+        var rand = Math.floor(Math.random() * 15);
+        if (rand > 0)
+          this.map[y].push(0);
+        else
+          this.map[y].push(1);
+      }
+    }
+  }
+  draw() {
+    for (var y = 0; y < canHeight; y++) {
+      for (var x = 0; x < canWidth; x++) {
+        if (this.map[y][x] === 1) {
+          bctx.drawImage(treeTileset, x * unit, y * unit, unit, unit);
+        }
+      }
+    }
+    console.log("hi!");
+  }
+}
+var world = new World();
 
 //ctx.drawImage(img, sx, sy, swidth, sheight, x, y, width, height)
 
@@ -22,6 +53,8 @@ function clear(context, x = 0, y = 0, width = unit * 24, height = unit * 12) {
   context.clearRect(x, y, width, height);
 }
 
+var treeTileset = new Image();
+treeTileset.src = "Tree.png";
 var walkingTileset = new Image();
 walkingTileset.src = "WalkingAnimationFirstTileset800.png";
 
@@ -32,10 +65,10 @@ class Character {
     this.img = img;
     this.planStart = 0; // frame the plan began on.
     this.preActI = 0; // previous action index.
-    this.plan = []; // 0-left 1-up 2-right 3-down 4-hit
+    this.plan = []; // 0-left 1-up 2-right 3-down 4-idle 5-hit
   }
   draw(frame) {
-    bctx.drawImage(this.img, frame * 96, 0, 96, 96, this.x, this.y, unit * 1, unit * 1);
+    cctx.drawImage(this.img, frame * 96, 0, 96, 96, this.x, this.y, unit * 1, unit * 1);
   }
   act() {
     var diff = frame - this.planStart;
@@ -63,50 +96,37 @@ class Character {
       this.draw(Math.floor(frame / gameStep) % 4);
     } else {
       this.plan = [];
-      this.choosePlan(Math.random(), Math.random());
+      this.choosePlan();
     }
   }
-  choosePlan(input1, input2, override = false) {
+  choosePlan() {
     var c = this;
-    if (c.plan.length !== 0 && !override) return;
+    if (c.plan.length !== 0) return;
     var currX = Math.round(c.x / unit);
     var currY = Math.round(c.y / unit);
-    console.log(currX, currY);
-    [input1, input2].forEach(function (input) {
-      for (i = 0; i < Math.floor(Math.random() * 4) + 1; i++) {
-        if (input < 0.5) { // left or right
-          var attempt = Math.floor(Math.random() * 2) * 2;
-          currX += attempt - 1;
-          if (currX < 1 || currX > canWidth - 1) {
-            attempt = (attempt - 2) * -1;
-            currX += (attempt - 1) * 2;
-          }
-          c.plan.push(attempt);
-        } else {
-          var attempt = Math.floor(Math.random() * 2) * 2 + 1;
-          currY += attempt - 2;
-          if (currY < 1 || currY > canHeight - 2) {
-            attempt = (attempt - 1) * -1 + 3;
-            currY += (attempt - 2) * 2;
-          }
-          c.plan.push(attempt);
-        }
-      }
-    });
+    //console.log(currX, currY);
+    // super cool function that starts at the coor, then moves 1 unit
+    // in every available and non-visited direction to check if there
+    // is a possible action (in this case if the square is a 1), then
+    // when it finds a 1 it stops all other searches and propagates
+    // back to the start and returns the path it took to get there!
+    for (var i = 0; i < Math.random() * 5 + 1; i++) {
+      c.plan.push(Math.floor(Math.random() * 4));
+    }
     c.planStart = frame;
     c.act();
   }
 }
 
-var amount = 30;
+var amount = 1;
 var characters = [];
-for (i = 0; i < amount; i++) {
+for (var i = 0; i < amount; i++) {
   characters.push(new Character(unit * 10, unit * 6, walkingTileset));
 }
 var raf = undefined;
 function animate() {
-  clear(bctx);
-  for (i = 0; i < characters.length; i++) {
+  clear(cctx);
+  for (var i = 0; i < characters.length; i++) {
     characters[i].act();
   }
   frame++;
@@ -115,4 +135,5 @@ function animate() {
 
 walkingTileset.onload = function () {
   raf = window.requestAnimationFrame(animate);
+  world.draw();
 }

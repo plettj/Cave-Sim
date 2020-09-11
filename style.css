@@ -16,12 +16,11 @@ html, body {
   left: 0;
   width: 100%;
   height: calc(var(--unit) * 2);
-  background-color: rgba(50, 250, 50, 0.3);
 }
 
 canvas {
   position: absolute;
   top: 0;
   left: 0;
-  background-color: rgba(250, 50, 50, 0.5);
+  border: 5px solid black;
 }
