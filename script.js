@@ -66,6 +66,7 @@ class Character {
     this.planStart = 0; // frame the plan began on.
     this.preActI = 0; // previous action index.
     this.plan = []; // 0-left 1-up 2-right 3-down 4-idle 5-hit
+    this.nodes = []; // for plan searching
   }
   draw(frame) {
     cctx.drawImage(this.img, frame * 96, 0, 96, 96, this.x, this.y, unit * 1, unit * 1);
@@ -110,11 +111,16 @@ class Character {
     // is a possible action (in this case if the square is a 1), then
     // when it finds a 1 it stops all other searches and propagates
     // back to the start and returns the path it took to get there!
+
+    // create baby functionality to travel 4 directions and call again
     for (var i = 0; i < Math.random() * 5 + 1; i++) {
       c.plan.push(Math.floor(Math.random() * 4));
     }
     c.planStart = frame;
     c.act();
+  }
+  propagate(coor, path) {
+
   }
 }
 
