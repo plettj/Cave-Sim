@@ -63,13 +63,22 @@ class Character {
     this.x = x;
     this.y = y;
     this.img = img;
+    this.sight = 6; // maximum moves to be seen into future.
     this.planStart = 0; // frame the plan began on.
     this.preActI = 0; // previous action index.
     this.plan = []; // 0-left 1-up 2-right 3-down 4-idle 5-hit
-    this.nodes = []; // for plan searching
+    this.nodes = []; // for plan searching. [x, y, cost, ?final?]
   }
   draw(frame) {
     cctx.drawImage(this.img, frame * 96, 0, 96, 96, this.x, this.y, unit * 1, unit * 1);
+  }
+  matchNode(node, set) {
+    for (var i = 0; i < set.length; i++) {
+      if (node[0] === set[i][0] && node[1] === set[i][1]) {
+        return i;
+      }
+    }
+    return -1;
   }
   act() {
     var diff = frame - this.planStart;
@@ -93,6 +102,10 @@ class Character {
         case 3:
           this.y += unit / runSpeed;
           break;
+        case 5:
+          if (diff === runSpeed - 1)
+            clear(bctx, this.x, this.y, unit, unit);
+            break;
       }
       this.draw(Math.floor(frame / gameStep) % 4);
     } else {
@@ -112,7 +125,37 @@ class Character {
     // when it finds a 1 it stops all other searches and propagates
     // back to the start and returns the path it took to get there!
 
-    // create baby functionality to travel 4 directions and call again
+    var result = [];
+    c.nodes = [[Math.floor(c.x / unit), Math.floor(c.y / unit), 0]];
+    var found = false;
+    var cost = 0;
+    while (!found) {
+      cost++;
+      for (var i = 0; i < c.nodes.length; i++) {
+        if (c.nodes[i][2] === cost - 1) {
+          var node = [c.nodes[i][0], c.nodes[i][1], cost - 1];
+          for (var j = 0; j < 4; j++) {
+            if (j === 0 && node[0] + 1 < canWidth) node[0] += 1;
+            else if (j === 1 && node[0] - 1 > -1) node[0] -= 1;
+            else if (j === 2 && node[1] + 1 < canHeight) node[1] += 1;
+            else if (j === 3 && node[1] - 1 > -1) node[1] -= 1;
+            if (!(node[0] === c.nodes[i][0] && node[1] === c.nodes[i][1])) {
+              var dupl = c.matchNode(node, c.nodes);
+              if (dupl === -1) {
+                node[2] = cost;
+                if (world.map[node[1]][node[0]] !== 0) {
+                  found = true;
+                  node.push(world.map[node[1]][node[0]]);
+                }
+                c.nodes.push(node);
+              }
+            }
+          }
+        }
+      }
+      if (cost === 6) found = true;
+    }
+    console.log(c.nodes);
     for (var i = 0; i < Math.random() * 5 + 1; i++) {
       c.plan.push(Math.floor(Math.random() * 4));
     }
