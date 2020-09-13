@@ -150,12 +150,12 @@ class Character {
                 c.nodes.push(node);
               }
             }
+            node = [c.nodes[i][0], c.nodes[i][1], cost - 1];
           }
         }
       }
       if (cost === 6) found = true;
     }
-    console.log(c.nodes);
     for (var i = 0; i < Math.random() * 5 + 1; i++) {
       c.plan.push(Math.floor(Math.random() * 4));
     }
@@ -173,12 +173,20 @@ for (var i = 0; i < amount; i++) {
   characters.push(new Character(unit * 10, unit * 6, walkingTileset));
 }
 var raf = undefined;
+
+
+var throttle = 8;
+var thrott_i = 0;
+
 function animate() {
-  clear(cctx);
-  for (var i = 0; i < characters.length; i++) {
-    characters[i].act();
+  thrott_i++;
+  if (!(thrott_i % throttle)) {
+    clear(cctx);
+    for (var i = 0; i < characters.length; i++) {
+      characters[i].act();
+    }
+    frame++;
   }
-  frame++;
   raf = window.requestAnimationFrame(animate);
 }
 
