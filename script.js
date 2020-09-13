@@ -154,16 +154,32 @@ class Character {
           }
         }
       }
-      if (cost === 6) found = true;
+      if (cost === 6) {
+        c.nodes = "Cannot see action.";
+        found = true;
+      }
     }
+    console.log(c.nodes);
+    var path = c.findPath(c.x, c.y, c.nodes); // [path, final action]
+    console.log(path);
     for (var i = 0; i < Math.random() * 5 + 1; i++) {
       c.plan.push(Math.floor(Math.random() * 4));
     }
     c.planStart = frame;
     c.act();
   }
-  propagate(coor, path) {
-
+  findPath(x, y, nodes) {
+    if (nodes === "Cannot see action.") return [4];
+    var cost = 7;
+    var aim = [];
+    for (var i = nodes.length - 1; i > -1; i--) {
+      if (nodes[i].length > 3) aim = nodes[i];
+      cost = nodes[i][2];
+      // start at aim node. go backward until a node with adjacent coordinates
+      // with lower cost is found. jump past next costing nodes again, look
+      // for adjacent nodes again until origin is spotted.
+      // use coordinates to map out the direction he travels.
+    }
   }
 }
 
