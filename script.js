@@ -26,7 +26,7 @@ class World {
     for (var y = 0; y < canHeight; y++) {
       this.map.push([]);
       for (var x = 0; x < canWidth; x++) {
-        var rand = Math.floor(Math.random() * 15);
+        var rand = Math.floor(Math.random() * 6);
         if (rand > 0)
           this.map[y].push(0);
         else
@@ -56,21 +56,21 @@ function clear(context, x = 0, y = 0, width = unit * 24, height = unit * 12) {
 var treeTileset = new Image();
 treeTileset.src = "Tree.png";
 var walkingTileset = new Image();
-walkingTileset.src = "WalkingAnimationFirstTileset800.png";
+walkingTileset.src = "CavemanTileset.png";
 
 class Character {
   constructor(x, y, img) {
     this.x = x;
     this.y = y;
     this.img = img;
-    this.sight = 6; // maximum moves to be seen into future.
+    this.sight = canWidth; // maximum moves to be seen into future.
     this.planStart = 0; // frame the plan began on.
     this.preActI = 0; // previous action index.
     this.plan = []; // 0-left 1-up 2-right 3-down 4-idle 5-hit
     this.nodes = []; // for plan searching. [x, y, cost, ?final?]
   }
-  draw(frame) {
-    cctx.drawImage(this.img, frame * 96, 0, 96, 96, this.x, this.y, unit * 1, unit * 1);
+  draw(frame, row) {
+    cctx.drawImage(this.img, frame * 96, row * 96, 96, 96, this.x, this.y, unit * 1, unit * 1);
   }
   matchNode(node, set) {
     for (var i = 0; i < set.length; i++) {
@@ -83,6 +83,7 @@ class Character {
   act() {
     var diff = frame - this.planStart;
     var actionI = Math.floor(diff / runSpeed);
+    var row = 1; // row of tileset to be on
     if (actionI < this.plan.length) {
       if (this.preActI !== actionI) { // first time at new action
         this.x = Math.round(this.x / unit) * unit;
@@ -102,12 +103,17 @@ class Character {
         case 3:
           this.y += unit / runSpeed;
           break;
+        case 4:
+          row = 0;
+          break;
         case 5:
-          if (diff === runSpeed - 1)
-            clear(bctx, this.x, this.y, unit, unit);
-            break;
+          if (!(diff % runSpeed)) {
+            clear(bctx, Math.round(this.x / unit) * unit, Math.round(this.y / unit) * unit, unit, unit);
+            world.map[Math.round(this.y / unit)][Math.round(this.x / unit)] = 0;
+          }
+          break;
       }
-      this.draw(Math.floor(frame / gameStep) % 4);
+      this.draw(Math.floor(frame / gameStep) % 4, row);
     } else {
       this.plan = [];
       this.choosePlan();
@@ -116,18 +122,12 @@ class Character {
   choosePlan() {
     var c = this;
     if (c.plan.length !== 0) return;
-    var currX = Math.round(c.x / unit);
-    var currY = Math.round(c.y / unit);
-    //console.log(currX, currY);
-    // super cool function that starts at the coor, then moves 1 unit
-    // in every available and non-visited direction to check if there
-    // is a possible action (in this case if the square is a 1), then
-    // when it finds a 1 it stops all other searches and propagates
-    // back to the start and returns the path it took to get there!
-
-    var result = [];
-    c.nodes = [[Math.floor(c.x / unit), Math.floor(c.y / unit), 0]];
+    c.nodes = [[Math.round(c.x / unit), Math.round(c.y / unit), 0]];
     var found = false;
+    if (world.map[c.nodes[0][1]][c.nodes[0][0]] === 1) {
+      found = true;
+      c.nodes[0].push(1);
+    }
     var cost = 0;
     while (!found) {
       cost++;
@@ -154,44 +154,49 @@ class Character {
           }
         }
       }
-      if (cost === 6) {
+      if (cost === c.sight) {
         c.nodes = "Cannot see action.";
         found = true;
       }
     }
-    console.log(c.nodes);
-    var path = c.findPath(c.x, c.y, c.nodes); // [path, final action]
-    console.log(path);
-    for (var i = 0; i < Math.random() * 5 + 1; i++) {
-      c.plan.push(Math.floor(Math.random() * 4));
-    }
+    var path = c.findPath(c.x, c.y, c.nodes); // [path1, path2, etc.]
+    if (path[0] !== 4) path.push(4, 5);
+    c.plan = path;
     c.planStart = frame;
     c.act();
   }
   findPath(x, y, nodes) {
     if (nodes === "Cannot see action.") return [4];
-    var cost = 7;
-    var aim = [];
+    var cost = this.sight + 1;
+    var path = []; // stores order of coors
+    var simplePath = []; // final directional numbers
     for (var i = nodes.length - 1; i > -1; i--) {
-      if (nodes[i].length > 3) aim = nodes[i];
-      cost = nodes[i][2];
-      // start at aim node. go backward until a node with adjacent coordinates
-      // with lower cost is found. jump past next costing nodes again, look
-      // for adjacent nodes again until origin is spotted.
-      // use coordinates to map out the direction he travels.
+      if (nodes[i][2] < cost && path.length > 0) {
+        var x = path[path.length - 1][0] - nodes[i][0];
+        var y = path[path.length - 1][1] - nodes[i][1];
+        if (Math.abs(x) + Math.abs(y) < 2) {
+          path.push([nodes[i][0], nodes[i][1], x, y]);
+          cost = nodes[i][2];
+        }
+      }
+      if (nodes[i].length > 3 && path.length === 0) path = [[nodes[i][0], nodes[i][1], 0, 0]];
+      console.log(path.length + ", current node: " + nodes[i]);
     }
+    for (var i = path.length - 1; i > 0; i--) {
+      simplePath.push((path[i][2] + 1) * Math.abs(path[i][2]) + (path[i][3] + 2) * Math.abs(path[i][3]));
+    }
+    return simplePath.reverse();
   }
 }
 
 var amount = 1;
 var characters = [];
 for (var i = 0; i < amount; i++) {
-  characters.push(new Character(unit * 10, unit * 6, walkingTileset));
+  characters.push(new Character(unit * Math.floor(Math.random() * canWidth), unit * Math.floor(Math.random() * canHeight), walkingTileset));
 }
 var raf = undefined;
 
-
-var throttle = 8;
+var throttle = 1;
 var thrott_i = 0;
 
 function animate() {
