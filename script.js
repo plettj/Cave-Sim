@@ -80,7 +80,7 @@ class Character {
     }
     return -1;
   }
-  act() {
+  act(times) {
     var diff = frame - this.planStart;
     var actionI = Math.floor(diff / runSpeed);
     var row = 1; // row of tileset to be on
@@ -116,12 +116,14 @@ class Character {
       this.draw(Math.floor(frame / gameStep) % 4, row);
     } else {
       this.plan = [];
-      this.choosePlan();
+      times = this.choosePlan(times);
     }
+    return times;
   }
-  choosePlan() {
+  choosePlan(times) {
     var c = this;
     if (c.plan.length !== 0) return;
+    var time = Date.now();
     c.nodes = [[Math.round(c.x / unit), Math.round(c.y / unit), 0]];
     var found = false;
     if (world.map[c.nodes[0][1]][c.nodes[0][0]] === 1) {
@@ -159,11 +161,17 @@ class Character {
         found = true;
       }
     }
+    time -= Date.now();
+    times[0] += Math.abs(time);
+    time = Date.now();
     var path = c.findPath(c.x, c.y, c.nodes); // [path1, path2, etc.]
+    time -= Date.now();
+    times[1] += Math.abs(time);
     if (path[0] !== 4) path.push(4, 5);
     c.plan = path;
     c.planStart = frame;
-    c.act();
+    c.act(times);
+    return times;
   }
   findPath(x, y, nodes) {
     if (nodes === "Cannot see action.") return [4];
@@ -180,7 +188,7 @@ class Character {
         }
       }
       if (nodes[i].length > 3 && path.length === 0) path = [[nodes[i][0], nodes[i][1], 0, 0]];
-      console.log(path.length + ", current node: " + nodes[i]);
+      //console.log(path.length + ", current node: " + nodes[i]);
     }
     for (var i = path.length - 1; i > 0; i--) {
       simplePath.push((path[i][2] + 1) * Math.abs(path[i][2]) + (path[i][3] + 2) * Math.abs(path[i][3]));
@@ -189,25 +197,25 @@ class Character {
   }
 }
 
-var amount = 1;
+var amount = 1000;
 var characters = [];
 for (var i = 0; i < amount; i++) {
   characters.push(new Character(unit * Math.floor(Math.random() * canWidth), unit * Math.floor(Math.random() * canHeight), walkingTileset));
 }
 var raf = undefined;
 
-var throttle = 1;
-var thrott_i = 0;
+var times = [0, 0]; // [findPath, MainPlanChoosing]
 
 function animate() {
-  thrott_i++;
-  if (!(thrott_i % throttle)) {
-    clear(cctx);
-    for (var i = 0; i < characters.length; i++) {
-      characters[i].act();
-    }
-    frame++;
+  clear(cctx);
+  for (var i = 0; i < characters.length; i++) {
+    var indTimes = characters[i].act([0, 0]);
+    times[0] += indTimes[0];
+    times[1] += indTimes[1];
   }
+  console.log(times[0] + " " + times[1]);
+  times = [0, 0];
+  frame++;
   raf = window.requestAnimationFrame(animate);
 }
 
