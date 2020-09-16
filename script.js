@@ -8,8 +8,8 @@ document.body.style.setProperty("--pixel", unit / 12 + "px");
 var frame = 0; // iterates forever
 var gameStep = 8; // number of frames 1 step is.
 var runSpeed = 32; // number of frames it takes to do 1 action.
-var canWidth = 24; // canvas width
-var canHeight = 12; // canvas height
+var canWidth = 16; // canvas width
+var canHeight = 9; // canvas height
 
 var C = document.getElementById("CharacterCanvas");
 C.width = unit * canWidth;
@@ -26,7 +26,7 @@ class World {
     for (var y = 0; y < canHeight; y++) {
       this.map.push([]);
       for (var x = 0; x < canWidth; x++) {
-        var rand = Math.floor(Math.random() * 6);
+        var rand = Math.floor(Math.random() * 25);
         if (rand > 0)
           this.map[y].push(0);
         else
@@ -63,7 +63,7 @@ class Character {
     this.x = x;
     this.y = y;
     this.img = img;
-    this.sight = canWidth; // maximum moves to be seen into future.
+    this.sight = 6; // maximum moves to be seen into future.
     this.planStart = 0; // frame the plan began on.
     this.preActI = 0; // previous action index.
     this.plan = []; // 0-left 1-up 2-right 3-down 4-idle 5-hit
@@ -205,6 +205,10 @@ for (var i = 0; i < amount; i++) {
 var raf = undefined;
 
 var times = [0, 0]; // [findPath, MainPlanChoosing]
+var averageTimes = [0, 0];
+var recordings = 0;
+// results: 141.2, 0.3 (1000 guys, 16x9 map, 16 sight)
+// results: 38.0,  0.6 (1000 guys, 16x9 map, 6  sight)
 
 function animate() {
   clear(cctx);
@@ -213,8 +217,13 @@ function animate() {
     times[0] += indTimes[0];
     times[1] += indTimes[1];
   }
-  console.log(times[0] + " " + times[1]);
-  times = [0, 0];
+  if (times[0] > 0 || times[1] > 0) {
+    averageTimes[0] = (averageTimes[0] * recordings + times[0]) / (recordings + 1)
+    averageTimes[1] = (averageTimes[1] * recordings + times[1]) / (recordings + 1)
+    recordings += 1;
+    console.log(recordings + " | " + times[0] + " " + times[1] + " | " + Math.round(averageTimes[0] * 10) / 10 + " " + Math.round(averageTimes[1] * 10) / 10);
+    times = [0, 0];
+  }
   frame++;
   raf = window.requestAnimationFrame(animate);
 }
