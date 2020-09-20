@@ -20,17 +20,23 @@ B.width = unit * canWidth;
 B.height = unit * canHeight;
 var bctx = B.getContext('2d');
 
+var gold = new Image();
+gold.src = "Gold.png";
+var rocksTileset = new Image();
+rocksTileset.src = "RocksTileset.png";
+var walkingTileset = new Image();
+walkingTileset.src = "CavemanTileset.png";
+
 class World {
   constructor() {
     this.map = [];
     for (var y = 0; y < canHeight; y++) {
       this.map.push([]);
       for (var x = 0; x < canWidth; x++) {
-        var rand = Math.floor(Math.random() * 25);
-        if (rand > 0)
-          this.map[y].push(0);
-        else
-          this.map[y].push(1);
+        var rand = Math.floor(Math.random() * 8);
+        if (rand < 2) this.map[y].push(1);
+        else if (rand < 5) this.map[y].push(2);
+        else this.map[y].push(0);
       }
     }
   }
@@ -38,11 +44,12 @@ class World {
     for (var y = 0; y < canHeight; y++) {
       for (var x = 0; x < canWidth; x++) {
         if (this.map[y][x] === 1) {
-          bctx.drawImage(treeTileset, x * unit, y * unit, unit, unit);
+          bctx.drawImage(gold, x * unit, y * unit, unit, unit);
+        } else if (this.map[y][x] === 2) {
+          bctx.drawImage(rocksTileset, 96 * Math.floor(Math.random() * 2), 96 * Math.floor(Math.random() * 2), 96, 96, x * unit, y * unit, unit, unit)
         }
       }
     }
-    console.log("hi!");
   }
 }
 var world = new World();
@@ -53,17 +60,12 @@ function clear(context, x = 0, y = 0, width = unit * 24, height = unit * 12) {
   context.clearRect(x, y, width, height);
 }
 
-var treeTileset = new Image();
-treeTileset.src = "Tree.png";
-var walkingTileset = new Image();
-walkingTileset.src = "CavemanTileset.png";
-
 class Character {
   constructor(x, y, img) {
     this.x = x;
     this.y = y;
     this.img = img;
-    this.sight = 6; // maximum moves to be seen into future.
+    this.sight = 30; // maximum moves to be seen into future.
     this.planStart = 0; // frame the plan began on.
     this.preActI = 0; // previous action index.
     this.plan = []; // 0-left 1-up 2-right 3-down 4-idle 5-hit
@@ -143,9 +145,9 @@ class Character {
             else if (j === 3 && node[1] - 1 > -1) node[1] -= 1;
             if (!(node[0] === c.nodes[i][0] && node[1] === c.nodes[i][1])) {
               var dupl = c.matchNode(node, c.nodes);
-              if (dupl === -1) {
+              if (dupl === -1 && world.map[node[1]][node[0]] !== 2) {
                 node[2] = cost;
-                if (world.map[node[1]][node[0]] !== 0) {
+                if (world.map[node[1]][node[0]] === 1) {
                   found = true;
                   node.push(world.map[node[1]][node[0]]);
                 }
@@ -193,11 +195,11 @@ class Character {
     for (var i = path.length - 1; i > 0; i--) {
       simplePath.push((path[i][2] + 1) * Math.abs(path[i][2]) + (path[i][3] + 2) * Math.abs(path[i][3]));
     }
-    return simplePath.reverse();
+    return simplePath;
   }
 }
 
-var amount = 1000;
+var amount = 10;
 var characters = [];
 for (var i = 0; i < amount; i++) {
   characters.push(new Character(unit * Math.floor(Math.random() * canWidth), unit * Math.floor(Math.random() * canHeight), walkingTileset));
