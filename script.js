@@ -65,7 +65,7 @@ class Character {
     this.x = x;
     this.y = y;
     this.img = img;
-    this.sight = 20; // maximum moves to be seen into future.
+    this.sight = 7; // maximum moves to be seen into future.
     this.planStart = 0; // frame the plan began on.
     this.preActI = 0; // previous action index.
     this.plan = []; // 0-left 1-up 2-right 3-down 4-idle 5-hit
