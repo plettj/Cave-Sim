@@ -21,11 +21,11 @@ B.height = unit * canHeight;
 var bctx = B.getContext('2d');
 
 var gold = new Image();
-gold.src = "Gold.png";
+gold.src = "images/Gold.png";
 var rocksTileset = new Image();
-rocksTileset.src = "RocksTileset.png";
+rocksTileset.src = "images/RocksTileset.png";
 var walkingTileset = new Image();
-walkingTileset.src = "CavemanTileset.png";
+walkingTileset.src = "images/CavemanTileset.png";
 
 class World {
   constructor() {
