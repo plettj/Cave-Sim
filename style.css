@@ -8,7 +8,7 @@ html, body {
 	height: 100%;
 	overflow: hidden;
 }
-
+/*
 #TopUI {
   position: absolute;
   display: inline-block;
@@ -17,10 +17,19 @@ html, body {
   width: 100%;
   height: calc(var(--unit) * 2);
 }
+*/
+#PopUp {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(var(--unit) * 3);
+    height: calc(var(--unit) * 5);
+    background-color: red;
+    transition-duration: 0.3s;
+}
 
 canvas {
   position: absolute;
   top: 0;
   left: 0;
-  border: 3px solid black;
 }

@@ -60,10 +60,13 @@ class Character {
         this.x = x;
         this.y = y;
         this.img = img;
+        this.info = new Info();
+        this.paused = 0; // 1 for paused. 0 for not paused.
         this.sight = 16; // maximum moves to be seen into future.
         this.planStart = 0; // frame the plan began on.
         this.preActI = 0; // previous action index.
-        this.plan = []; // 0-left 1-up 2-right 3-down 4-idle 5-hit
+        this.plan = []; // 0-left 1-up 2-right 3-down 4-idle 5-hit (list)
+        this.dir = 0; // 0-left 1-right
         this.nodes = []; // for plan searching. [x, y, cost, ?final?]
     }
     draw(frame, row) {
@@ -77,31 +80,49 @@ class Character {
         }
         return -1;
     }
+    pause() {
+        this.paused = this.paused * -1 + 1;
+        return this.paused;
+    }
     act(times) {
         var diff = frame - this.planStart;
         var actionI = Math.floor(diff / runSpeed);
-        var row = 1; // row of tileset to be on
+        if (this.paused && this.preActI !== actionI) {
+            this.planStart++;
+            this.draw(Math.floor(frame / gameStep) % 4, 2 + this.dir);
+            return times;
+        }
+        var row = this.dir;
         if (actionI < this.plan.length) {
             if (this.preActI !== actionI) { // first time at new action
                 this.x = Math.round(this.x / unit) * unit;
                 this.y = Math.round(this.y / unit) * unit;
                 this.preActI = actionI;
+                if (this.paused) {
+                    this.planStart++;
+                    this.draw(Math.floor(frame / gameStep) % 4, 2 + this.dir);
+                    return times;
+                }
             }
             switch (this.plan[actionI]) {
                 case 0:
                     this.x -= unit / runSpeed;
+                    this.dir = 0;
+                    row = this.dir;
                     break;
                 case 1:
                     this.y -= unit / runSpeed;
                     break;
                 case 2:
                     this.x += unit / runSpeed;
+                    this.dir = 1;
+                    row = this.dir;
                     break;
                 case 3:
                     this.y += unit / runSpeed;
                     break;
                 case 4:
-                    row = 0;
+                    row = 2 + this.dir;
                     break;
                 case 5:
                     if (!(diff % runSpeed)) {
@@ -191,6 +212,20 @@ class Character {
             simplePath.push((path[i][2] + 1) * Math.abs(path[i][2]) + (path[i][3] + 2) * Math.abs(path[i][3]));
         }
         return simplePath;
+    }
+}
+
+class Info {
+    constructor(parent1, parent2) {
+        this.name = "Bob";
+        this.level = 1;
+        this.genes = [
+            [10], // Walking: [speed]
+            [10, 20], // Mining: [speed, ability%]
+            [10, 20], // Forestry: [speed, ability%]
+            [10, 1] // Building: [speed, level#]
+        ];
+        // use parent1 and parent2 to initialize info.
     }
 }
 
