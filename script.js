@@ -149,6 +149,7 @@ class Character {
             c.nodes[0].push(1);
         }
         var cost = 0;
+        // Begin A* Algorithm!
         while (!found) {
             cost++;
             for (var i = 0; i < c.nodes.length; i++) {
@@ -156,10 +157,9 @@ class Character {
                     var node = [c.nodes[i][0], c.nodes[i][1], cost - 1];
                     for (var j = 0; j < 4; j++) {
                         if (j === 0 && node[0] + 1 < world.size[0]) node[0] += 1;
-                        else if (j === 1 && node[0] - 1 > -1) node[0] -= 1;
-                        else if (j === 2 && node[1] + 1 < world.size[1]) node[1] += 1;
-                        else if (j === 3 && node[1] - 1 > -1) node[1] -= 1;
-                        if (!(node[0] === c.nodes[i][0] && node[1] === c.nodes[i][1])) {
+                        else if j === 1 && node[0] - 1 > -1) node[0] -= 1;
+                        else if j === 2 && node[1] + 1 < world.size[1]) node[1] += 1;
+                        else if j === 3 && node[1] - 1 > -1) node[1] -= 1;
                             var dupl = c.matchNode(node, c.nodes);
                             if (dupl === -1 && world.map[node[1]][node[0]] !== 2) {
                                 node[2] = cost;
