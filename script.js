@@ -6,8 +6,9 @@ document.body.style.setProperty("--unit", unit + "px");
 document.body.style.setProperty("--pixel", unit / 12 + "px");
 
 var frame = 0; // iterates forever
-var gameStep = 8; // number of frames 1 step is.
-var runSpeed = 32; // number of frames it takes to do 1 action.
+var gameStep = 4; // number of frames 1 step is.
+var runSpeed = 8; // number of frames it takes to do 1 action.
+var amount = 500; // number of characters we're drawing on the screen!
 
 var C = document.getElementById("CharacterCanvas");
 var cctx = C.getContext('2d');
@@ -28,9 +29,9 @@ class World {
         for (var y = 0; y < this.size[1]; y++) {
             this.map.push([]);
             for (var x = 0; x < this.size[0]; x++) {
-                var rand = Math.floor(Math.random() * 8);
-                if (rand < 2) this.map[y].push(1);
-                else if (rand < 5) this.map[y].push(2);
+                var rand = Math.floor(Math.random() * 16);
+                if (rand < 3) this.map[y].push(1);
+                else if (rand < 7) this.map[y].push(2);
                 else this.map[y].push(0);
             }
         }
@@ -47,7 +48,7 @@ class World {
         }
     }
 }
-var world = new World();
+var world;
 
 //ctx.drawImage(img, sx, sy, swidth, sheight, x, y, width, height)
 
@@ -62,7 +63,7 @@ class Character {
         this.img = img;
         this.info = new Info();
         this.paused = 0; // 1 for paused. 0 for not paused.
-        this.sight = 16; // maximum moves to be seen into future.
+        this.sight = 18; // maximum moves to be seen into future.
         this.planStart = 0; // frame the plan began on.
         this.preActI = 0; // previous action index.
         this.plan = []; // 0-left 1-up 2-right 3-down 4-idle 5-hit (list)
@@ -148,8 +149,8 @@ class Character {
             found = true;
             c.nodes[0].push(1);
         }
-        var cost = 0;
         // Begin A* Algorithm!
+        var cost = 0;
         while (!found) {
             cost++;
             for (var i = 0; i < c.nodes.length; i++) {
@@ -157,14 +158,15 @@ class Character {
                     var node = [c.nodes[i][0], c.nodes[i][1], cost - 1];
                     for (var j = 0; j < 4; j++) {
                         if (j === 0 && node[0] + 1 < world.size[0]) node[0] += 1;
-                        else if j === 1 && node[0] - 1 > -1) node[0] -= 1;
-                        else if j === 2 && node[1] + 1 < world.size[1]) node[1] += 1;
-                        else if j === 3 && node[1] - 1 > -1) node[1] -= 1;
+                        else if (j === 1 && node[0] - 1 > -1) node[0] -= 1;
+                        else if (j === 2 && node[1] + 1 < world.size[1]) node[1] += 1;
+                        else if (j === 3 && node[1] - 1 > -1) node[1] -= 1;
+                        if (!(node[0] === c.nodes[i][0] && node[1] === c.nodes[i][1])) {
                             var dupl = c.matchNode(node, c.nodes);
                             if (dupl === -1 && world.map[node[1]][node[0]] !== 2) {
                                 node[2] = cost;
                                 if (world.map[node[1]][node[0]] === 1) {
-                                    found = true;
+                                    found = true; // Discovered the nearest target.
                                     node.push(world.map[node[1]][node[0]]);
                                 }
                                 c.nodes.push(node);
@@ -229,12 +231,8 @@ class Info {
     }
 }
 
-var amount = 10;
+var raf;
 var characters = [];
-for (var i = 0; i < amount; i++) {
-    characters.push(new Character(unit * Math.floor(Math.random() * world.size[0]), unit * Math.floor(Math.random() * world.size[1]), walkingTileset));
-}
-var raf = undefined;
 
 var times = [0, 0]; // [findPath, MainPlanChoosing]
 var averageTimes = [0, 0];
@@ -258,14 +256,28 @@ function animate() {
         times = [0, 0];
     }
     frame++;
+    if (!(frame % 100)) {
+        world = new World();
+        cctx.clearRect(0, 0, 16 * unit, 9 * unit);
+        bctx.clearRect(0, 0, 16 * unit, 9 * unit);
+        characters = [];
+        for (var i = 0; i < amount; i++) {
+            characters.push(new Character(unit * Math.floor(Math.random() * world.size[0]), unit * Math.floor(Math.random() * world.size[1]), walkingTileset));
+        }
+        world.draw();
+    }
     raf = window.requestAnimationFrame(animate);
 }
 
 walkingTileset.onload = function () {
+    world = new World();
     C.width = unit * world.size[0];
     C.height = unit * world.size[1];
     B.width = unit * world.size[0];
     B.height = unit * world.size[1];
-    raf = window.requestAnimationFrame(animate);
+    for (var i = 0; i < amount; i++) {
+        characters.push(new Character(unit * Math.floor(Math.random() * world.size[0]), unit * Math.floor(Math.random() * world.size[1]), walkingTileset));
+    }
     world.draw();
+    raf = window.requestAnimationFrame(animate);
 }

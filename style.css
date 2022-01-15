@@ -30,6 +30,22 @@ html, body {
 
 canvas {
   position: absolute;
-  top: 0;
-  left: 0;
+  top: calc((100% - var(--unit) * 9) / 2);
+  left: calc((100% - var(--unit) * 16) / 2);
+}
+#title {
+    width: 100%;
+    text-align: center;
+    font-size: calc(var(--unit) * 0.6);
+    margin-top: calc(var(--unit) * 0.2);
+    font-weight: 500;
+    font-family: Arial, Helvetica, sans-serif;
+}
+#subtitle {
+    width: 100%;
+    text-align: center;
+    font-size: calc(var(--unit) * 0.35);
+    margin-top: calc(var(--unit) * 0.2);
+    font-weight: 500;
+    font-family: Arial, Helvetica, sans-serif;
 }
